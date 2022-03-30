@@ -1,0 +1,125 @@
+---
+title: "Fitbit Data Analysis"
+output: html_notebook
+---
+
+```{r import packages}
+# Importing the packages
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r load data, echo=TRUE}
+# Loading the dataset
+daily_activity <- read_csv("fitabase_data/dailyActivity_merged.csv")
+```
+
+```{r view data}
+# Viewing the data
+head(daily_activity)
+```
+
+```{r column names}
+# Getting the column names
+colnames(daily_activity)
+```
+
+```{r inspect data}
+# Inspecting the structure of data
+str(daily_activity)
+```
+
+```{r unique participants}
+# Finding number of unique participants in the dataset
+n_distinct(daily_activity$Id)
+```
+
+```{r daily_activity summary}
+# Getting quick summary of data
+daily_activity %>% 
+  select(TotalSteps, TotalDistance, SedentaryMinutes, Calories) %>% 
+  summary()
+```
+
+By this we can see that each of the four variables have Min. value of 0, this could mean that the tracker was off at time during the data collection.  
+The average total steps is 7638. Average total distance is 5.490 miles which is 8.83 km, this could mean that the participants were mostly active. Average sedentary minutes is 991.2 i.e. 16.51 hour. 
+
+Average sedentary minutes doesn't agree with the average total distance, this could mean that the data has outliers.
+
+```{r total distance vs sedentary minutes}
+# Plotting total distance vs sedentary minutes
+ggplot(data = daily_activity) + 
+  geom_point(mapping = aes(x = TotalDistance, y = SedentaryMinutes), color= "skyblue") +
+  labs(title = "Sedentary Minutes vs Distance", y = "Sedentary Minutes", x = "Distance")
+```
+
+```{r total steps vs sedentary minutes}
+# To investigate the relationship between Sedentary minutes and total steps. plotting a chart.
+ggplot(data = daily_activity) + 
+  geom_point(mapping = aes(x = TotalSteps, y = SedentaryMinutes), color = "violet") +
+  labs(title = "Sedentary Minutes vs Steps", x = "Steps", y = "Sedentary Minutes")
+```
+
+```{r creating column SedentaryHours}
+daily_activity_v2 <- daily_activity %>% 
+  mutate(SedentaryHours = SedentaryMinutes/ 60)
+head(daily_activity_v2)
+```
+The relationship between sedentary minutes and total distance cannot be interpreted more at this point. To explore further, I will make a new column as SedentaryHours
+
+```{r SedenatryHours bar chart}
+# Plotting total steps vs SedentaryHours
+ggplot(data = daily_activity_v2) +
+  geom_point(mapping = aes(x = TotalSteps ,y = SedentaryHours), color = "magenta") +
+  labs(title = "Sedentary Hours vs Steps In a Day", x = "Steps", y = "Sedentary Hours") +
+  geom_rect(xmin = 100, ymin = 7.5, xmax = 15000, ymax = 22.5, alpha= 0.01) +
+  annotate("text", label="More Sedentary hours show less steps", x = 20000, y = 5, color = "blue")
+```
+
+We can clearly see that **more sedentary hours show fewer steps**. This can be used to market the product. This could mean that **people who sit more tend to walk less**. 
+
+```{r VeryActiveMinutes vs Calories}
+# Plotting graph of VeryActiveMinutes vs Calories
+ggplot(data = daily_activity) +
+  geom_point(mapping = aes(x = Calories, y = VeryActiveMinutes), color = "purple") +
+  geom_rect(aes(xmin = 1300, ymin = 5, xmax = 3200, ymax = 60), alpha =0.01) +
+  labs(title = "(Very) Active Minutes vs Calories", y = "(Very) Active Minutes", x = "Calories") +
+  annotate("text", x = 1200, y = 100, label = "Burned 3200 Calories or less", color= "blue") 
+```
+
+From the visualization we can see that people who have Very active minutes less than 60 have burned 3200 calories or less while people with very active minutes greater than 60 have burned more calories.
+
+```{r importing sleep data}
+# Importing the sleep data
+sleep_day <- read_csv("fitabase_data/sleepDay_merged.csv")
+head(sleep_day)
+```
+
+By looking at the data it is clear that the time in the *SleepDay* column is useless. let's remove it.
+```{r remove time from SleepDay column}
+sleep_day_v2 <- sleep_day %>% 
+  separate(SleepDay, c("SleepDay", "time2"), sep= " ")
+```
+
+```{r time2 column deletion}
+# Deleting the time2 column
+sleep_day_v2 <- sleep_day_v2 %>% 
+  select(-time2)
+head(sleep_day_v2)
+```
+
+```{r TotalMinutesAsleep vs TotalTimeInBed}
+# Plotting TotalMinutesAsleep vs TotalTimeInBed 
+ggplot(data = sleep_day_v2) +
+  geom_point(mapping = aes(x = TotalMinutesAsleep, y = TotalTimeInBed, color = TotalSleepRecords)) +
+   scale_color_gradient(low = "#800080", high = "#FF00FF") +
+  labs(title = "Time In Bed vs Minutes Asleep", x = "Minutes Asleep", y = "Time In Bed", col = "Sleep Record(s)")
+```
+
+Instead of getting a linear relationship we got a somewhat dispersed relationship. This means that **more time in bed doesn't necessarily represent more sleep**.
+
+## Analysis Results
+
+* More sedentary hours show fewer steps.
+* People who have Very active minutes less than 60 have burned 3200 calories or less while people with very active minutes greater than 60 have burned more calories.
+* More time in bed doesn't necessarily represent more sleep.
