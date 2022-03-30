@@ -2,7 +2,7 @@
 title: "Data Analysis Processes"
 author: "Apurva Yadav"
 date: '2022-03-26'
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
