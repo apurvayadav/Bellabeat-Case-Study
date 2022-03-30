@@ -1,6 +1,6 @@
 ---
 title: "Fitbit Data Analysis"
-output: html_notebook
+output: github_notebook
 ---
 
 ```{r import packages}
